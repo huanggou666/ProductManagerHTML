@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品管理工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .search-bar {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-bar button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .search-bar button:hover {
+            background: #0056b3;
+        }
+
+        .import-export {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .import-export input[type="file"] {
+            display: none;
+        }
+
+        .import-export label {
+            padding: 10px 20px;
+            background: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .import-export label:hover {
+            background: #138496;
+        }
+
+        .add-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .add-form h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .form-group input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: #218838;
+        }
+
+        .btn-secondary {
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+
+        tr.selected {
+            background: #cce5ff;
+        }
+
+        td.clickable {
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+
+        td.clickable:hover {
+            background: #e3f2fd;
+        }
+
+        .copy-hint {
+            font-size: 10px;
+            color: #999;
+            margin-left: 5px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        td.clickable:hover .copy-hint {
+            opacity: 1;
+        }
+
+        .copy-hint::before {
+            content: '📋';
+            font-size: 10px;
+        }
+
+        .product-image {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+
+        .col-title {
+            width: 25%;
+            min-width: 200px;
+        }
+
+        .col-tags {
+            width: 20%;
+            min-width: 150px;
+        }
+
+        .col-url, .col-promotion, .col-shop, .col-notes {
+            width: 10%;
+            min-width: 100px;
+        }
+
+        .col-actions {
+            width: 100px;
+            min-width: 100px;
+        }
+
+        .btn-edit, .btn-delete {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin: 0 2px;
+        }
+
+        .btn-edit {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #0056b3;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        .btn-save, .btn-cancel {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin: 0 2px;
+        }
+
+        .btn-save {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        tr.editing {
+            background: #fff3cd;
+        }
+
+        tr.editing td {
+            padding: 5px 10px;
+        }
+
+        .edit-input {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 12px;
+            box-sizing: border-box;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: none;
+        }
+
+        .toast.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state p {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>商品管理工具</h1>
+        <div id="productCount" style="text-align:center;margin-bottom:15px;color:#666;font-size:14px;"></div>
+
+        <div class="import-export">
+            <button onclick="exportData()" style="padding:10px 20px;background:#28a745;color:white;border:none;border-radius:4px;cursor:pointer;">📤 导出数据</button>
+            <label for="importFile" style="padding:10px 20px;background:#17a2b8;color:white;border:none;border-radius:4px;cursor:pointer;">📥 导入数据</label>
+            <input type="file" id="importFile" accept=".json" onchange="importData(event)">
+            <span style="color:#666;font-size:12px;">导入会覆盖现有数据，请先导出备份</span>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="搜索商品标题、标签、店铺...">
+            <button onclick="searchProducts()">搜索</button>
+            <button onclick="clearSearch()">清空搜索</button>
+        </div>
+
+        <div class="add-form">
+            <h3>➕ 添加新商品</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>商品标题 *</label>
+                    <input type="text" id="productTitle" placeholder="请输入商品标题">
+                </div>
+                <div class="form-group">
+                    <label>常用视频Tag</label>
+                    <input type="text" id="productTags" placeholder="多个标签用逗号分隔">
+                </div>
+                <div class="form-group">
+                    <label>商品地址</label>
+                    <input type="text" id="productUrl" placeholder="请输入商品链接">
+                </div>
+                <div class="form-group">
+                    <label>商品推广页地址</label>
+                    <input type="text" id="productPromotion" placeholder="请输入推广页链接">
+                </div>
+                <div class="form-group">
+                    <label>所属店铺</label>
+                    <input type="text" id="productShop" placeholder="请输入店铺名称">
+                </div>
+                <div class="form-group">
+                    <label>备注</label>
+                    <textarea id="productNotes" placeholder="请输入备注信息"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>商品图片</label>
+                    <input type="text" id="productImage" placeholder="输入图片URL或粘贴图片">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn-primary" id="addBtn" onclick="addProduct()">添加商品</button>
+                <button class="btn-secondary" id="clearBtn" onclick="clearForm()">清空表单</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="col-image">图片</th>
+                        <th class="col-title">商品标题</th>
+                        <th class="col-tags">常用视频Tag</th>
+                        <th class="col-url">商品地址</th>
+                        <th class="col-promotion">推广页地址</th>
+                        <th class="col-shop">所属店铺</th>
+                        <th class="col-notes">备注</th>
+                        <th class="col-actions">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="productTableBody">
+                </tbody>
+            </table>
+            <div class="empty-state" id="emptyState">
+                <p>暂无商品，请添加新商品</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">已复制到剪贴板</div>
+
+    <script>
+        let products = [];
+        let editingProductId = null;
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function updateProductCount() {
+            const count = products.length;
+            const countDiv = document.getElementById('productCount');
+            if (count > 0) {
+                countDiv.innerHTML = `📦 当前共有 <strong>${count}</strong> 个商品`;
+            } else {
+                countDiv.innerHTML = '';
+            }
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem('products');
+            if (saved) {
+                products = JSON.parse(saved);
+                updateProductCount();
+                renderTable();
+            }
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('products', JSON.stringify(products));
+            updateProductCount();
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('已复制到剪贴板');
+            } catch (err) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('已复制到剪贴板');
+            }
+        }
+
+        function copyCell(td, id, field) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+            
+            let value = product[field] || '';
+            copyToClipboard(value);
+        }
+
+        function addProduct() {
+            const title = document.getElementById('productTitle').value.trim();
+            const tags = document.getElementById('productTags').value.trim();
+            const url = document.getElementById('productUrl').value.trim();
+            const promotion = document.getElementById('productPromotion').value.trim();
+            const shop = document.getElementById('productShop').value.trim();
+            const notes = document.getElementById('productNotes').value.trim();
+            const image = document.getElementById('productImage').value.trim();
+
+            if (!title) {
+                alert('请输入商品标题');
+                return;
+            }
+
+            const product = {
+                id: generateId(),
+                title,
+                tags,
+                url,
+                promotion,
+                shop,
+                notes,
+                image,
+                createTime: new Date().toISOString()
+            };
+
+            products.unshift(product);
+            saveToStorage();
+            renderTable();
+            clearForm();
+            showToast('商品添加成功');
+        }
+
+        function clearForm() {
+            document.getElementById('productTitle').value = '';
+            document.getElementById('productTags').value = '';
+            document.getElementById('productUrl').value = '';
+            document.getElementById('productPromotion').value = '';
+            document.getElementById('productShop').value = '';
+            document.getElementById('productNotes').value = '';
+            document.getElementById('productImage').value = '';
+        }
+
+        function renderTable(filterText = '') {
+            const tbody = document.getElementById('productTableBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            let filteredProducts = products;
+            if (filterText) {
+                const search = filterText.toLowerCase();
+                filteredProducts = products.filter(p => 
+                    p.title.toLowerCase().includes(search) ||
+                    p.tags.toLowerCase().includes(search) ||
+                    p.shop.toLowerCase().includes(search) ||
+                    p.notes.toLowerCase().includes(search)
+                );
+            }
+
+            if (filteredProducts.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                if (filterText) {
+                    emptyState.querySelector('p').textContent = '未找到匹配的商品';
+                } else {
+                    emptyState.querySelector('p').textContent = '暂无商品，请添加新商品';
+                }
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            
+            tbody.innerHTML = filteredProducts.map(product => {
+                if (editingProductId === product.id) {
+                    return `
+                        <tr class="editing">
+                            <td>
+                                ${product.image ? 
+                                    `<img src="${product.image}" alt="preview" class="product-image">` : 
+                                    '<div class="product-image" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:12px;">无图片</div>'
+                                }
+                            </td>
+                            <td class="col-title"><input type="text" class="edit-input" id="edit-title" value="${escapeHtml(product.title)}"></td>
+                            <td class="col-tags"><input type="text" class="edit-input" id="edit-tags" value="${escapeHtml(product.tags)}"></td>
+                            <td class="col-url"><input type="text" class="edit-input" id="edit-url" value="${escapeHtml(product.url)}"></td>
+                            <td class="col-promotion"><input type="text" class="edit-input" id="edit-promotion" value="${escapeHtml(product.promotion)}"></td>
+                            <td class="col-shop"><input type="text" class="edit-input" id="edit-shop" value="${escapeHtml(product.shop)}"></td>
+                            <td class="col-notes"><input type="text" class="edit-input" id="edit-notes" value="${escapeHtml(product.notes)}"></td>
+                            <td class="col-actions">
+                                <button class="btn-save" onclick="saveInlineEdit('${product.id}')">💾</button>
+                                <button class="btn-cancel" onclick="cancelInlineEdit()">✖️</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+                return `
+                    <tr>
+                        <td class="clickable" onclick="event.stopPropagation();copyCell(this, '${product.id}', 'image')">
+                            ${product.image ? 
+                                `<img src="${product.image}" alt="${product.title}" class="product-image" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2270%22 height=%2270%22><rect fill=%22%23f0f0f0%22 width=%2270%22 height=%2270%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2212%22>无图片</text></svg>'">` : 
+                                '<div class="product-image" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:12px;">无图片</div>'
+                            }
+                        </td>
+                        <td class="col-title clickable" onclick="event.stopPropagation();copyCell(this, '${product.id}', 'title')">${escapeHtml(product.title)}<span class="copy-hint"></span></td>
+                        <td class="col-tags clickable" onclick="event.stopPropagation();copyCell(this, '${product.id}', 'tags')">${escapeHtml(product.tags) || '-'}<span class="copy-hint"></span></td>
+                        <td class="col-url clickable" onclick="event.stopPropagation();copyCell(this, '${product.id}', 'url')">
+                            ${product.url ? `<a href="${product.url}" target="_blank" onclick="event.stopPropagation()">链接</a>` : '-'}<span class="copy-hint"></span>
+                        </td>
+                        <td class="col-promotion clickable" onclick="event.stopPropagation();copyCell(this, '${product.id}', 'promotion')">
+                            ${product.promotion ? `<a href="${product.promotion}" target="_blank" onclick="event.stopPropagation()">链接</a>` : '-'}<span class="copy-hint"></span>
+                        </td>
+                        <td class="col-shop clickable" onclick="event.stopPropagation();copyCell(this, '${product.id}', 'shop')">${escapeHtml(product.shop) || '-'}<span class="copy-hint"></span></td>
+                        <td class="col-notes clickable" onclick="event.stopPropagation();copyCell(this, '${product.id}', 'notes')">${escapeHtml(product.notes) || '-'}<span class="copy-hint"></span></td>
+                        <td class="col-actions" onclick="event.stopPropagation()">
+                            <button class="btn-edit" onclick="startInlineEdit('${product.id}')">✏️</button>
+                            <button class="btn-delete" onclick="deleteProduct('${product.id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function startInlineEdit(id) {
+            editingProductId = id;
+            renderTable(document.getElementById('searchInput').value);
+            document.getElementById('edit-title').focus();
+        }
+
+        function saveInlineEdit(id) {
+            const productIndex = products.findIndex(p => p.id === id);
+            if (productIndex === -1) return;
+
+            const title = document.getElementById('edit-title').value.trim();
+            if (!title) {
+                alert('请输入商品标题');
+                return;
+            }
+
+            products[productIndex] = {
+                ...products[productIndex],
+                title,
+                tags: document.getElementById('edit-tags').value.trim(),
+                url: document.getElementById('edit-url').value.trim(),
+                promotion: document.getElementById('edit-promotion').value.trim(),
+                shop: document.getElementById('edit-shop').value.trim(),
+                notes: document.getElementById('edit-notes').value.trim(),
+                updateTime: new Date().toISOString()
+            };
+
+            saveToStorage();
+            editingProductId = null;
+            renderTable(document.getElementById('searchInput').value);
+            showToast('商品已更新');
+        }
+
+        function cancelInlineEdit() {
+            editingProductId = null;
+            renderTable(document.getElementById('searchInput').value);
+            showToast('已取消编辑');
+        }
+
+        function deleteProduct(id) {
+            if (!confirm('确定要删除这个商品吗？')) return;
+            
+            products = products.filter(p => p.id !== id);
+            saveToStorage();
+            
+            if (editingProductId === id) {
+                editingProductId = null;
+            }
+            
+            renderTable(document.getElementById('searchInput').value);
+            showToast('商品已删除');
+        }
+
+        function searchProducts() {
+            const searchText = document.getElementById('searchInput').value.trim();
+            renderTable(searchText);
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            renderTable('');
+        }
+
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchProducts();
+            }
+        });
+
+        loadFromStorage();
+
+        function exportData() {
+            const dataStr = JSON.stringify(products, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `商品数据_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('数据已导出');
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (!Array.isArray(imported)) {
+                        throw new Error('数据格式错误');
+                    }
+                    if (!confirm(`确定要导入 ${imported.length} 条商品数据吗？\n现有数据将被覆盖！`)) {
+                        return;
+                    }
+                    products = imported;
+                    saveToStorage();
+                    renderTable();
+                    showToast(`成功导入 ${imported.length} 条商品`);
+                } catch (err) {
+                    alert('导入失败：' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+    </script>
+</body>
+</html>
